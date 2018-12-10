@@ -1,1 +1,5 @@
 __pycache__
+
+# Ignore everything in `images` but `.gitkeep`
+images/*
+!images/.gitkeep

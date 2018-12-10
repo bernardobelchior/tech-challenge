@@ -1,7 +1,7 @@
 # import the necessary packages
 from imutils.video import VideoStream
+from datetime import datetime
 from pyzbar import pyzbar
-import datetime
 import imutils
 import time
 import cv2
@@ -24,10 +24,8 @@ found = set()
 # loop over the frames from the video stream
 try:
   while True:
-  # grab the frame from the threaded video stream and resize it to
-  # have a maximum width of 400 pixels
+    # grab the frame from the threaded video stream and resize it to
     frame = vs.read()
-    frame = imutils.resize(frame, width=400)
     
     # find the barcodes in the frame and decode each of the barcodes
     barcodes = pyzbar.decode(frame)
@@ -50,6 +48,8 @@ try:
 
       print("User authenticated as {}".format(text))
       print("Equipment checkout completed successfully")
+
+      cv2.imwrite("./images/{}.jpg".format(datetime.now().isoformat()), frame) 
       
       # if the barcode text is currently not in our CSV file, write
       # the timestamp + barcode to disk and update the set
