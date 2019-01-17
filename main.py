@@ -2,14 +2,15 @@
 from imutils.video import VideoStream
 from datetime import datetime
 from pyzbar import pyzbar
+from Scanner import Scanner
+from Auth import get_member_info
 import imutils
 import time
 import cv2
 import RPi.GPIO as GPIO
-import SimpleMFRC522
 
 
-reader = SimpleMFRC522.SimpleMFRC522()
+reader = Scanner()
 
 # initialize the video stream and allow the camera sensor to warm up
 print("[INFO] starting video stream...")
@@ -21,40 +22,46 @@ time.sleep(2.0)
 # barcodes found thus far
 found = set()
 
+print("Waiting for QR Code")
+
 # loop over the frames from the video stream
 try:
   while True:
     # grab the frame from the threaded video stream and resize it to
-    frame = vs.read()
+    #frame = vs.read()
     
     # find the barcodes in the frame and decode each of the barcodes
-    barcodes = pyzbar.decode(frame)
+    #barcode = pyzbar.decode(frame)[0]
     
-    # loop over the detected barcodes
-    for barcode in barcodes:
-      # extract the bounding box location of the barcode and draw
-      # the bounding box surrounding the barcode on the image
-      
-      # the barcode data is a bytes object so if we want to draw it
-      # on our output image we need to convert it to a string first
-      barcodeData = barcode.data.decode("utf-8")
-      
-      # draw the barcode data and barcode type on the image
-      text = "Found QR Code with content: {}".format(barcodeData)
-      print(text)
-      print("Awaiting authentication...")
-      
-      _id, text = reader.read()
+    # extract the bounding box location of the barcode and draw
+    # the bounding box surrounding the barcode on the image
+    
+    # the barcode data is a bytes object so if we want to draw it
+    # on our output image we need to convert it to a string first
+    #barcodeData = barcode.data.decode("utf-8")
+    
+    # draw the barcode data and barcode type on the image
+    #print("Found QR Code with content: {}".format(barcodeData))
+    print("Awaiting authentication...")
 
-      print("User authenticated as {}".format(text))
+    uid = reader.read_uid()
+
+    if uid is not None:
+
+      print("Card UID is {}".format(uid))
+
+      info = get_member_info(uid)
+
+      print("User ID: {}".format(info['MemberID']))
+      print("Active: {}".format(info['Active']))
       print("Equipment checkout completed successfully")
 
-      cv2.imwrite("./images/{}.jpg".format(datetime.now().isoformat()), frame) 
-      
-      # if the barcode text is currently not in our CSV file, write
-      # the timestamp + barcode to disk and update the set
-      if barcodeData not in found:
-        found.add(barcodeData)
+      # cv2.imwrite("./images/{}.jpg".format(datetime.now().isoformat()), frame) 
+      # 
+      # # if the barcode text is currently not in our CSV file, write
+      # # the timestamp + barcode to disk and update the set
+      # if barcodeData not in found:
+      #   found.add(barcodeData)
  
 finally:
   GPIO.cleanup()
