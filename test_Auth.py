@@ -1,3 +1,3 @@
-import Auth
+from src import Auth
 
-Auth.get_member_info('7E745693')
+print(Auth.get_member_info('432EB87D'))
