@@ -1,4 +1,4 @@
-from Scanner import Scanner
+from src.Scanner import Scanner
 
 scanner = Scanner()
 
