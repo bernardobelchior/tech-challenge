@@ -1,27 +1,26 @@
-# import the necessary packages
-from imutils.video import VideoStream
 from datetime import datetime
-from pyzbar import pyzbar
 from Scale import Scale
 from Scanner import Scanner
 from Auth import get_member_info
 from Camera import Camera
 from SnipeIT import SnipeIT
 from Display import Display
-from urllib.parse import unquote
+from FileUpload import FileUpload
 import logging
-import imutils
 from time import sleep
-import cv2
 import RPi.GPIO as GPIO
 
-logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
+def generate_image_name():
+    return "{}.png".format(datetime.now().isoformat())
+
+# logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
 display = Display()
 
 print("[0/2] Starting setup...")
 display.print("[0/2] Setup\n\rstarted")
 
+file_upload = FileUpload()
 snipe_it = SnipeIT()
 reader = Scanner()
 scale = Scale()
@@ -49,6 +48,7 @@ try:
       asset_id = camera.scan_qr_code()
       sleep(1)
 
+    display.print("Loading...")
     logging.debug('Asset ID: {}'.format(asset_id))
 
     last_activity = snipe_it.get_asset_last_activity(asset_id)
@@ -60,7 +60,7 @@ try:
 
     uid = None
 
-    display.print("Place your\n\rcard")
+    display.print("Please, place\n\ryour card")
     print("Awaiting authentication...")
 
     while uid is None:
@@ -70,10 +70,10 @@ try:
 
     if uid is not None:
       logging.debug("Card UID is {}".format(uid))
+      display.print("Loading...")
 
       weight = scale.get_weight()
-      image_path = "./images/{}.jpg".format(datetime.now().isoformat())
-      cv2.imwrite(image_path, camera.get_image()) 
+      image_url = file_upload.upload_file(generate_image_name(), camera.get_image())
       member_id = int(get_member_info(uid)['MemberID'])
 
       if last_activity.get('note') is not None:
@@ -91,14 +91,14 @@ try:
       # As such, we can't just rely on the last activity, but have to check them
       # all until we find one that is either check in or check out.
       if last_activity['action_type'] == 'checkout':
-        if snipe_it.checkin(asset_id, weight, image_path):
+        if snipe_it.checkin(asset_id, weight, image_url):
           display.print("Checkin\n\rsuccessful")
           print("Equipment checkin completed successfully.")
         else:
           display.print("Checkin\n\rfailed")
           print("Equipment checkin failed.")
       else:
-        if snipe_it.checkout(asset_id, member_id, weight, image_path):
+        if snipe_it.checkout(asset_id, member_id, weight, image_url):
           display.print("Checkout\n\rsuccessful")
           print("Equipment checkout completed successfully")
         else: 

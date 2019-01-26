@@ -1,13 +1,7 @@
-# import the necessary packages
 from imutils.video import VideoStream
-from datetime import datetime
 from pyzbar import pyzbar
-from Scanner import Scanner
-from Scale import Scale
-import imutils
 import time
 import cv2
-import RPi.GPIO as GPIO
 
 class Camera():
   def __init__(self):
@@ -24,7 +18,8 @@ class Camera():
       return None
 
   def get_image(self):
-    return self.vs.read()
+    """Returns the image as bytes and encoded as PNG."""
+    return cv2.imencode(".png", self.vs.read())[1].tobytes()
 
   def __del__(self):
     self.vs.stop()
